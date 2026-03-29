@@ -1,67 +1,80 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
-# -------------------------- All your original parameters are fully preserved --------------------------
-# Core parameters of the Rossler system (classic chaotic parameters)
-a = 0.2
-b = 0.2
-c = 5.7
+# -------------------------- 页面配置 --------------------------
+st.set_page_config(page_title="Rossler 混沌吸引子", layout="wide")
+st.title("混沌系统 - Rossler Attractor")
 
-# Differential equation parameters
-dt = 0.001  # Time step
-total_steps = 200000  # Slightly reduced for Streamlit speed, you can change back to 2000000
+# 初始化会话状态（控制开始/停止）
+if "running" not in st.session_state:
+    st.session_state.running = False
+if "history" not in st.session_state:
+    st.session_state.history = []
 
-# Initial values
-x, y, z = 0.1, 0.1, 0.1
+# -------------------------- 侧边栏参数控制 --------------------------
+st.sidebar.header("参数控制")
+a = st.sidebar.slider("a", 0.0, 1.0, 0.2, 0.01)
+b = st.sidebar.slider("b", 0.0, 1.0, 0.2, 0.01)
+c = st.sidebar.slider("c", 0.0, 10.0, 5.7, 0.1)
+dt = st.sidebar.slider("dt", 0.001, 0.01, 0.005, 0.001)
+max_steps = st.sidebar.slider("最大步数", 10000, 100000, 50000, 1000)
 
-# Coordinate scaling (consistent with your original code)
-scale = 25
-offset_x = 0
-offset_y = -100
+# 控制按钮
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("开始绘制"):
+        st.session_state.running = True
+        st.session_state.history = []
+        # 初始值
+        x, y, z = 0.1, 0.1, 0.1
+        st.session_state.state = (x, y, z)
 
-# -------------------------- Streamlit Page Settings --------------------------
-st.title("Chaotic System - Rossler Attractor")
-st.markdown("Ported from your original Python turtle code to Streamlit version")
+with col2:
+    if st.button("停止绘制"):
+        st.session_state.running = False
 
-# -------------------------- Solve Rossler Equations (exact same algorithm) --------------------------
-with st.spinner("Calculating chaotic trajectory..."):
-    x_list = [x]
-    y_list = [y]
+# -------------------------- 实时绘制逻辑 --------------------------
+placeholder = st.empty()
 
-    for step in range(total_steps):
-        # Your original Rossler differential equations, unchanged
-        dx = -y - z
-        dy = x + a * y
-        dz = b + z * (x - c)
+if st.session_state.running:
+    x, y, z = st.session_state.state
+    hist = st.session_state.history
 
-        # Your original Euler iteration, unchanged
-        x += dx * dt
-        y += dy * dt
-        z += dz * dt
+    with st.spinner("绘制中...可点击停止"):
+        for step in range(max_steps):
+            # 【完全保留你的原始算法】
+            dx = -y - z
+            dy = x + a * y
+            dz = b + z * (x - c)
 
-        x_list.append(x)
-        y_list.append(y)
+            x += dx * dt
+            y += dy * dt
+            z += dz * dt
 
-x_arr = np.array(x_list)
-y_arr = np.array(y_list)
+            hist.append((x, y))
 
-# Your original coordinate transformation
-turtle_x = x_arr * scale + offset_x
-turtle_y = y_arr * scale + offset_y
+            # 每隔一段时间更新图像，避免卡死
+            if step % 500 == 0:
+                # 检查是否被停止
+                if not st.session_state.running:
+                    break
 
-# -------------------------- Plotting --------------------------
-fig, ax = plt.subplots(figsize=(10, 9), dpi=100)
-ax.set_facecolor("black")
-ax.plot(turtle_x, turtle_y, color="#00ffff", linewidth=0.8)
+                # 绘图
+                xs = [p[0] for p in hist]
+                ys = [p[1] for p in hist]
 
-# Draw your original coordinate axes
-ax.axhline(y=offset_y, color="gray", linewidth=1)
-ax.axvline(x=offset_x, color="gray", linewidth=1)
+                fig, ax = plt.subplots(figsize=(8, 7))
+                ax.set_facecolor("black")
+                ax.plot(xs, ys, color="#00ffff", linewidth=0.6)
+                ax.axis("off")
+                placeholder.pyplot(fig)
+                plt.close(fig)
 
-ax.set_aspect('equal')
-ax.axis("off")
-plt.tight_layout()
+                # 保存状态
+                st.session_state.state = (x, y, z)
+                st.session_state.history = hist
 
-# Display in Streamlit
-st.pyplot(fig)
+        st.session_state.running = False
+        st.success("绘制完成！")
