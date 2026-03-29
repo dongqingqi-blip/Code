@@ -86,13 +86,13 @@ with tab_alias:
         # ====== 交互参数 ======
         col1, col2, col3 = st.columns(3)
         with col1:
-            f_main = st.slider("主信号频率 (Hz)", 1, 30, 10, key="f_main")
+            f_main = st.slider("主信号频率 (Hz)", 1, 25, 10, key="f_main")
         with col2:
-            f_noise = st.slider("高频干扰频率 (Hz)", 40, 100, 60, key="f_noise")
+            f_noise = st.slider("高频干扰频率 (Hz)", 35, 100, 60, key="f_noise")
         with col3:
-            fs = st.slider("采样频率 fs (Hz)", 1, 50, 25, key="fs_filter")
+            fs = st.slider("采样频率 fs (Hz)", 1, 75, 100, key="fs_filter")
 
-        fc = st.slider("滤波器截止频率 (Hz)", 1, 50, 20, key="fc")
+        fc = st.slider("滤波器截止频率 (Hz)", 1, 50, 30, key="fc")
 
         # ====== 信号生成 ======
         t = np.linspace(0, 1, 1000)
