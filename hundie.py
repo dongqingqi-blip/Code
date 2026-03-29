@@ -22,9 +22,9 @@ with tab_alias:
     # ====== Streamlit 滑块（网页交互）======
     col1, col2 = st.columns(2)
     with col1:
-        f = st.slider("信号频率 f (Hz)", min_value=1, max_value=100, value=20)
+        f = st.slider("信号频率 f (Hz)", min_value=1, max_value=50, value=15)
     with col2:
-        fs = st.slider("采样频率 fs (Hz)", min_value=1, max_value=100, value=40)
+        fs = st.slider("采样频率 fs (Hz)", min_value=1, max_value=50, value=45)
 
     # ====== 计算信号 ======
     t = np.linspace(0, 1, 1000)
