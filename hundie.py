@@ -5,6 +5,18 @@ import streamlit as st
 # ====== Streamlit 页面配置 ======
 st.set_page_config(page_title="信号与系统教学演示", layout="wide")
 
+# 缩小标题与分割线行距的 CSS
+st.markdown("""
+<style>
+h2 {
+    margin-bottom: 0.3rem !important;
+}
+hr {
+    margin-top: 0.3rem !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ===================== 主页面：顶层选项卡 =====================
 st.title("📚 信号与系统教学演示动画")
 # 创建顶层选项卡：混叠仿真台 + 预留其他教学模块
@@ -16,7 +28,7 @@ with tab_alias:
     st.divider()
 
     # ========== 混叠仿真台内部：子选项卡（核心升级） ==========
-    sub_tab1, sub_tab2 = st.tabs(["📊 采样混叠演示", "🛡️ 抗混叠滤波器演示"])
+    sub_tab1, sub_tab2 = st.tabs(["📊 采样混叠演示", "🛡 抗混叠滤波器演示"])
 
     # ===================== 子选项卡1：采样混叠演示（原代码） =====================
     with sub_tab1:
@@ -63,9 +75,9 @@ with tab_alias:
         ax.legend(loc="upper right")
         st.pyplot(fig)
 
-    # ===================== 子选项卡2：抗混叠滤波器演示（新增功能） =====================
-    with sub_tab2:
-        st.subheader("抗混叠滤波器演示 (Anti-aliasing Filter)")
+        # ===================== 子选项卡2：抗混叠滤波器演示（新增功能） =====================
+        with sub_tab2:
+            st.subheader("抗混叠滤波器演示 (Anti-aliasing Filter)")
         st.markdown("**原理**：采样前通过低通滤波器滤除高频分量，从根源避免混叠")
 
         # ====== 交互参数 ======
@@ -119,6 +131,6 @@ with tab_alias:
         else:
             st.info("ℹ️ 干扰频率低于奈奎斯特频率，无明显混叠")
 
-# ===================== 选项卡2：预留模块 =====================
-with tab_other:
-    st.info("ℹ️ 此处可扩展其他信号与系统教学演示模块")
+        # ===================== 选项卡2：预留模块 =====================
+        with tab_other:
+            st.info("ℹ️ 此处可扩展其他信号与系统教学演示模块")
