@@ -76,8 +76,8 @@ with tab_alias:
         st.pyplot(fig)
 
         # ===================== 子选项卡2：抗混叠滤波器演示（新增功能） =====================
-        with sub_tab2:
-            st.subheader("抗混叠滤波器演示 (Anti-aliasing Filter)")
+    with sub_tab2:
+        st.subheader("抗混叠滤波器演示 (Anti-aliasing Filter)")
         st.markdown("**原理**：采样前通过低通滤波器滤除高频分量，从根源避免混叠")
 
         # ====== 交互参数 ======
@@ -132,5 +132,5 @@ with tab_alias:
             st.info("ℹ️ 干扰频率低于奈奎斯特频率，无明显混叠")
 
         # ===================== 选项卡2：预留模块 =====================
-        with tab_other:
-            st.info("ℹ️ 此处可扩展其他信号与系统教学演示模块")
+with tab_other:
+    st.info("ℹ️ 此处可扩展其他信号与系统教学演示模块")
