@@ -1,80 +1,71 @@
 import streamlit as st
-import numpy as np
 import matplotlib.pyplot as plt
-import time
+import numpy as np
 
-# -------------------------- 页面配置 --------------------------
 st.set_page_config(page_title="Rossler 混沌吸引子", layout="wide")
-st.title("混沌系统 - Rossler Attractor")
+st.title("混沌系统 - Rossler 吸引子")
 
-# 初始化会话状态（控制开始/停止）
+# 控制状态
 if "running" not in st.session_state:
     st.session_state.running = False
-if "history" not in st.session_state:
-    st.session_state.history = []
 
-# -------------------------- 侧边栏参数控制 --------------------------
-st.sidebar.header("参数控制")
+# 侧边栏参数
+st.sidebar.header("Parameter Settings")
 a = st.sidebar.slider("a", 0.0, 1.0, 0.2, 0.01)
 b = st.sidebar.slider("b", 0.0, 1.0, 0.2, 0.01)
-c = st.sidebar.slider("c", 0.0, 10.0, 5.7, 0.1)
-dt = st.sidebar.slider("dt", 0.001, 0.01, 0.005, 0.001)
-max_steps = st.sidebar.slider("最大步数", 10000, 100000, 50000, 1000)
+c = st.sidebar.slider("c", 4.0, 12.0, 5.7, 0.1)
+dt = st.sidebar.slider("step length", 0.001, 0.01, 0.001, 0.001)
 
-# 控制按钮
+# 按钮
 col1, col2 = st.columns(2)
 with col1:
-    if st.button("开始绘制"):
+    if st.button("Start"):
         st.session_state.running = True
-        st.session_state.history = []
-        # 初始值
-        x, y, z = 0.1, 0.1, 0.1
-        st.session_state.state = (x, y, z)
+        st.session_state.x = 0.1
+        st.session_state.y = 0.1
+        st.session_state.z = 0.1
+        st.session_state.points = []
 
 with col2:
-    if st.button("停止绘制"):
+    if st.button("Stop"):
         st.session_state.running = False
 
-# -------------------------- 实时绘制逻辑 --------------------------
-placeholder = st.empty()
+# 绘图占位符
+plot_placeholder = st.empty()
 
+# 实时绘制主循环
 if st.session_state.running:
-    x, y, z = st.session_state.state
-    hist = st.session_state.history
+    x = st.session_state.x
+    y = st.session_state.y
+    z = st.session_state.z
+    points = st.session_state.points
 
-    with st.spinner("绘制中...可点击停止"):
-        for step in range(max_steps):
-            # 【完全保留你的原始算法】
-            dx = -y - z
-            dy = x + a * y
-            dz = b + z * (x - c)
+    # 无限实时绘制，直到停止
+    while st.session_state.running:
+        # 你的原始 Rossler 方程，完全没改
+        dx = -y - z
+        dy = x + a * y
+        dz = b + z * (x - c)
 
-            x += dx * dt
-            y += dy * dt
-            z += dz * dt
+        x += dx * dt
+        y += dy * dt
+        z += dz * dt
 
-            hist.append((x, y))
+        points.append((x, y))
 
-            # 每隔一段时间更新图像，避免卡死
-            if step % 500 == 0:
-                # 检查是否被停止
-                if not st.session_state.running:
-                    break
+        # 每一步都实时刷新！！！
+        xs = np.array([p[0] for p in points])
+        ys = np.array([p[1] for p in points])
 
-                # 绘图
-                xs = [p[0] for p in hist]
-                ys = [p[1] for p in hist]
+        fig, ax = plt.subplots(figsize=(8, 7), dpi=100)
+        ax.set_facecolor("black")
+        ax.plot(xs, ys, color="#00ffff", linewidth=0.7)
+        ax.axis("off")
+        plot_placeholder.pyplot(fig)
+        plt.close(fig)
 
-                fig, ax = plt.subplots(figsize=(8, 7))
-                ax.set_facecolor("black")
-                ax.plot(xs, ys, color="#00ffff", linewidth=0.6)
-                ax.axis("off")
-                placeholder.pyplot(fig)
-                plt.close(fig)
-
-                # 保存状态
-                st.session_state.state = (x, y, z)
-                st.session_state.history = hist
-
-        st.session_state.running = False
-        st.success("绘制完成！")
+        # 保存状态
+        st.session_state.x = x
+        st.session_state.y = y
+        st.session_state.z = z
+        st.session_state.points = points
