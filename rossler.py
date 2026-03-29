@@ -18,7 +18,7 @@ st.sidebar.header("Parameter settings")
 a = st.sidebar.slider("a", 0.0, 1.0, 0.2, 0.01)
 b = st.sidebar.slider("b", 0.0, 1.0, 0.2, 0.01)
 c = st.sidebar.slider("c", 0.0, 10.0, 5.7, 0.1)
-dt = st.sidebar.slider("step length", 0.01, 0.1, 0.02, 0.01)
+dt = st.sidebar.slider("step length", 0.001, 0.01, 0.001, 0.001)
 max_steps = st.sidebar.slider("minimum steps", 100000, 5000000, 300000, 10000)
 
 # 控制按钮
