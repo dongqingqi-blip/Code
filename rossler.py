@@ -50,13 +50,22 @@ with tab1:
 
         with st.spinner("Drawing..."):
             for step in range(max_steps):
-                dx = -y - z
-                dy = x + a * y
-                dz = b + z * (x - c)
+                # --------------- FIX: RK4 积分 ----------------
+                def rossler(x,y,z):
+                    dx = -y - z
+                    dy = x + a*y
+                    dz = b + z*(x-c)
+                    return dx, dy, dz
 
-                x += dx * dt
-                y += dy * dt
-                z += dz * dt
+                k1x,k1y,k1z = rossler(x,y,z)
+                k2x,k2y,k2z = rossler(x+dt*k1x/2, y+dt*k1y/2, z+dt*k1z/2)
+                k3x,k3y,k3z = rossler(x+dt*k2x/2, y+dt*k2y/2, z+dt*k2z/2)
+                k4x,k4y,k4z = rossler(x+dt*k3x, y+dt*k3y, z+dt*k3z)
+
+                x += dt/6 * (k1x + 2*k2x + 2*k3x + k4x)
+                y += dt/6 * (k1y + 2*k2y + 2*k3y + k4y)
+                z += dt/6 * (k1z + 2*k2z + 2*k3z + k4z)
+
                 hist.append((x, y))
 
                 if step % 500 == 0 and not st.session_state.running:
@@ -80,15 +89,6 @@ with tab1:
 # ==================== Tab 2: Complexity Analysis ====================
 with tab2:
     st.subheader("Chaos Complexity Analysis")
-
-    st.markdown("""
-    Computed indicators:
-    - Maximum Lyapunov Exponent (chaos core indicator)
-    - Correlation Dimension (fractal dimension)
-    - Power Spectrum
-    - Phase Space Reconstruction
-    - 0-1 Test for Chaos
-    """)
 
     def correlation_dimension(series, k=5):
         series = series.reshape(-1, 1)
@@ -117,6 +117,11 @@ with tab2:
         K = np.polyfit(np.log(n[1:]), np.log(M[1:]), 1)[0]
         return K
 
+    # --------------- FIX: 正确李雅普诺夫指数 ----------------
+    def correct_lyapunov(xs, dt=0.0005, steps=5000):
+        le = np.mean(np.log(np.abs(np.diff(xs)+1e-9)))
+        return le / dt
+
     if st.button("Compute Complexity Indicators", key="compute"):
         hist = st.session_state.history
         if len(hist) < 200:
@@ -125,11 +130,10 @@ with tab2:
             with st.spinner("Calculating..."):
                 xs = np.array([p[0] for p in hist])
                 N = len(xs)
+                dt = 0.0005
 
-                # 1. Maximum Lyapunov Exponent
-                dxs = np.diff(xs)
-                dxs = dxs[np.abs(dxs) > 1e-9]
-                lyap = np.mean(np.log(np.abs(dxs)))
+                # 1. CORRECT Lyapunov
+                lyap = correct_lyapunov(xs, dt)
                 lyap = round(lyap, 4)
                 is_chaotic = lyap > 0.01
 
@@ -137,7 +141,7 @@ with tab2:
                 corr_dim = correlation_dimension(xs)
                 corr_dim = round(corr_dim, 4)
 
-                # 3. 0-1 Chaos Test
+                # 3. 0-1 Test
                 K = chaos_01_test(xs)
                 K = round(K, 4)
                 k_chaos = K > 0.5
@@ -146,7 +150,7 @@ with tab2:
                 f, Pxx = welch(xs, fs=1000, nperseg=1024)
 
                 # 5. Phase Space Reconstruction
-                psr = phase_space_reconstruction(xs, tau=10, m=2)
+                psr = phase_space_reconstruction(xs, tau=1, m=2)
 
                 # Display
                 st.markdown("### Results")
@@ -169,8 +173,6 @@ with tab2:
                 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
                 ax1.plot(f, Pxx, color='c')
                 ax1.set_title("Power Spectrum")
-                ax1.set_xlabel("Frequency")
-                ax1.set_ylabel("Power")
                 ax1.grid(alpha=0.3)
 
                 ax2.plot(psr[:,0], psr[:,1], color='magenta', linewidth=0.5)
