@@ -1,14 +1,16 @@
+# Import required libraries
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import welch
 from scipy.stats import linregress
 
-# -------------------------- Page Config --------------------------
+# -------------------------- Page Configuration --------------------------
+# Set Streamlit page layout and title for academic visualization
 st.set_page_config(page_title="Rossler Attractor Analysis", layout="wide")
 st.title("Rossler Attractor Chaotic System Analysis")
 
-# Session State Initialization
+# Initialize session state variables for simulation control and data storage
 if "running" not in st.session_state:
     st.session_state.running = False
 if "history" not in st.session_state:
@@ -16,7 +18,8 @@ if "history" not in st.session_state:
 if "final_xs" not in st.session_state:
     st.session_state.final_xs = np.array([])
 
-# -------------------------- Tabs --------------------------
+# -------------------------- UI Tabs --------------------------
+# Create three tabs for theory, simulation, and complexity analysis
 tab1, tab2, tab3 = st.tabs([
     "📚 Theory & Background",
     "🎬 Attractor Simulation",
@@ -24,7 +27,7 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # ==============================================================================
-# Tab 1: FULL ENGLISH THEORY (Everything we discussed included)
+# Tab 1: Theoretical Background of Rossler System (Full English Content)
 # ==============================================================================
 with tab1:
     st.header("1. Rossler Attractor: Complete Theory")
@@ -60,7 +63,7 @@ It is a **strange attractor** with fractal geometry:
         st.markdown("""
 **Parameters**:
 - \(a, b, c\): control parameters
-- **Classical chaotic parameters**: \(a=0.2,\; b=0.2,\; c=5.7\)
+- **Classical chaotic parameters**: \(a=0.2, b=0.2, c=5.7\)
 - Only **one nonlinear term** \(z \cdot x\), making it the simplest chaotic system
 """)
 
@@ -143,30 +146,36 @@ The **0–1 test** is the primary and most reliable judgment.
 """)
 
 # ==============================================================================
-# Tab 2: Attractor Simulation
+# Tab 2: Rossler Attractor Numerical Simulation (Optimized Plotting)
 # ==============================================================================
 with tab2:
     st.header("2. Rossler Attractor Simulation")
-
     st.sidebar.header("Simulation Parameters")
+
+    # Slider controls for system parameters and simulation settings
     a = st.sidebar.slider("a", 0.0, 1.0, 0.20, 0.01)
     b = st.sidebar.slider("b", 0.0, 1.0, 0.20, 0.01)
     c = st.sidebar.slider("c", 0.0, 15.0, 5.70, 0.1)
     dt_display = st.sidebar.slider("Step Size (ms)", 0.05, 1.0, 0.10, 0.05)
     max_steps = st.sidebar.slider("Total Steps (k)", 1000, 5000, 3000, 500) * 1000
 
+    # Convert millisecond step size to second for numerical integration
     dt = dt_display / 1000
 
     col1, col2 = st.columns(2)
     with col1:
+        # Start simulation button
         if st.button("Start"):
             st.session_state.running = True
             st.session_state.history = []
+            # Initial state of the Rossler system (non-zero to avoid trivial solution)
             st.session_state.state = (0.1, 0.1, 0.1)
     with col2:
+        # Stop simulation button
         if st.button("Stop"):
             st.session_state.running = False
 
+    # Placeholder for dynamic plotting of the attractor
     placeholder = st.empty()
 
     if st.session_state.running:
@@ -175,11 +184,14 @@ with tab2:
         av, bv, cv = a, b, c
 
         with st.spinner("Generating High-Quality Attractor..."):
+            # 4th Order Runge-Kutta (RK4) numerical integration
             for step in range(max_steps):
+                # RK4 first stage
                 dx = -y - z
                 dy = x + av * y
                 dz = bv + z * (x - cv)
 
+                # RK4 second stage
                 x1 = x + dt * dx / 2
                 y1 = y + dt * dy / 2
                 z1 = z + dt * dz / 2
@@ -187,6 +199,7 @@ with tab2:
                 dy1 = x1 + av * y1
                 dz1 = bv + z1 * (x1 - cv)
 
+                # RK4 third stage
                 x2 = x + dt * dx1 / 2
                 y2 = y + dt * dy1 / 2
                 z2 = z + dt * dz1 / 2
@@ -194,6 +207,7 @@ with tab2:
                 dy2 = x2 + av * y2
                 dz2 = bv + z2 * (x2 - cv)
 
+                # RK4 fourth stage
                 x3 = x + dt * dx2
                 y3 = y + dt * dy2
                 z3 = z + dt * dz2
@@ -201,63 +215,82 @@ with tab2:
                 dy3 = x3 + av * y3
                 dz3 = bv + z3 * (x3 - cv)
 
-                x += dt * (dx + 2*dx1 + 2*dx2 + dx3) / 6
-                y += dt * (dy + 2*dy1 + 2*dy2 + dy3) / 6
-                z += dt * (dz + 2*dz1 + 2*dz2 + dz3) / 6
+                # Update system state using weighted RK4 sum
+                x += dt * (dx + 2 * dx1 + 2 * dx2 + dx3) / 6
+                y += dt * (dy + 2 * dy1 + 2 * dy2 + dy3) / 6
+                z += dt * (dz + 2 * dz1 + 2 * dz2 + dz3) / 6
 
-                # 优化数据截断：保留更多有效轨迹，图像更完整
-                if step > max_steps * 0.7:
+                # Retain only stable late-stage data (remove transient response)
+                if step > max_steps * 0.2:
                     hist.append((x, y))
 
+                # Terminate loop if stop button is pressed
                 if not st.session_state.running:
                     break
 
+        # Extract coordinate data for plotting
         xs = [p[0] for p in hist]
         ys = [p[1] for p in hist]
 
-        # ====================== 核心优化：高清专业绘图 ======================
+        # ====================== Optimized High-Definition Plotting ======================
+        # Professional plot style for chaotic attractor visualization
         plt.style.use('default')
-        fig, ax = plt.subplots(figsize=(9, 8), dpi=100)  # 高清分辨率
-        ax.set_facecolor("#101010")                      # 纯黑背景
-        # 渐变青蓝色线条，粗细适中，连续流畅
-        ax.plot(xs, ys, color='#00ffcc', linewidth=0.6, alpha=0.85)
-        # 去除所有边框、刻度，极致美观
+        # High DPI + large figure size for clear fractal structure
+        fig, ax = plt.subplots(figsize=(10, 9), dpi=150)
+        # Pure black background to highlight neon trajectory color
+        ax.set_facecolor("#000000")
+
+        # High-contrast neon cyan line: optimized thickness + transparency for chaos visualization
+        ax.plot(xs, ys, color='#00FFFF', linewidth=0.5, alpha=0.9)
+
+        # Remove all axes, ticks, and spines for clean academic visualization
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        # 紧凑布局，无空白边距
+        ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
+
+        # Tight layout to eliminate white borders
         plt.tight_layout(pad=0)
-        # 渲染图像
+        # Render plot in Streamlit placeholder
         placeholder.pyplot(fig, bbox_inches='tight', pad_inches=0)
         plt.close()
 
+        # Save simulation results to session state
         st.session_state.final_xs = np.array(xs)
         st.session_state.history = hist
         st.session_state.running = False
-        st.success("✅ High-Quality Rossler Attractor Generated!")
+        st.success("✅ High-Quality Rossler Attractor Generated Successfully!")
 
 # ==============================================================================
-# Tab 3: Complexity Analysis
+# Tab 3: Chaotic System Complexity Analysis (Optimized Visualization)
 # ==============================================================================
 with tab3:
     st.header("3. Chaotic Indicators Analysis")
 
+
     def robust_01_test(series, trials=3):
+        """
+        Robust 0-1 Chaos Test (Gottwald-Melbourne)
+        Detects chaos in deterministic dynamical systems from time series
+        Returns: K-value (0=non-chaotic, 1=chaotic) and verdict
+        """
         N = len(series)
         if N < 5000:
             return 0.0, "Insufficient Data"
+
+        # Detrend the time series to eliminate linear bias
         t = np.arange(N)
         slope, intercept, _, _, _ = linregress(t, series)
         detrended = series - (slope * t + intercept)
         Ks = []
+
+        # Multiple random c values for robust result
         for _ in range(trials):
-            c = np.random.uniform(np.pi/8, 7*np.pi/8)
+            c = np.random.uniform(np.pi / 8, 7 * np.pi / 8)
             p = np.cumsum(detrended * np.cos(c * t))
             q = np.cumsum(detrended * np.sin(c * t))
-            M = np.sqrt(p**2 + q**2)
+            M = np.sqrt(p ** 2 + q ** 2)
+
+            # Calculate growth rate via linear regression
             idx = np.where((t[1:] > 0) & (M[1:] > 0))[0]
             if len(idx) < 100:
                 continue
@@ -265,63 +298,84 @@ with tab3:
             log_M = np.log(M[1:][idx])
             sl, _, _, _, _ = linregress(log_t, log_M)
             Ks.append(sl)
+
         if not Ks:
-            return 0.0, "Error"
+            return 0.0, "Analysis Error"
         avg_k = np.mean(Ks)
         verdict = "✅ Chaotic" if avg_k > 0.5 else "❌ Non-Chaotic"
         return round(avg_k, 4), verdict
 
+
     def phase_recon(seq, tau=5):
+        """
+        Phase Space Reconstruction based on Takens' Theorem
+        tau: time delay for embedding
+        Returns: 2D reconstructed phase space points
+        """
         n = len(seq)
         if n <= tau:
             return []
-        return np.array([[seq[i], seq[i+tau]] for i in range(n-tau)])
+        return np.array([[seq[i], seq[i + tau]] for i in range(n - tau)])
 
+
+    # Trigger chaos analysis
     if st.button("Compute Chaotic Indicators"):
         xs = st.session_state.final_xs
         if len(xs) < 5000:
-            st.warning("⚠️ Please run the attractor simulation first.")
+            st.warning("⚠️ Please run the attractor simulation first to generate sufficient data.")
         else:
-            with st.spinner("Analyzing..."):
+            with st.spinner("Performing Chaos Analysis..."):
+                # Core chaos detection algorithms
                 K, res = robust_01_test(xs)
 
+                # Approximate Maximum Lyapunov Exponent calculation
                 try:
                     d = np.abs(np.diff(xs))
                     d = d[d > 1e-9]
-                    lyap = np.mean(np.log(d)) / 0.0001 if len(d) > 100 else -999
+                    lyap = np.mean(np.log(d)) / dt if len(d) > 100 else -999
                     lyap_str = f"{lyap:.4f}" if lyap > 0 else "-"
                 except:
                     lyap_str = "-"
 
+                # Power spectral density calculation (Welch's method)
                 f, Pxx = welch(xs, fs=10000, nperseg=2048)
-                psr = phase_recon(xs, tau=5 if K > 0.5 else 1)
+                # Adaptive time delay for phase space reconstruction
+                tau = 5 if K > 0.5 else 1
+                psr = phase_recon(xs, tau=tau)
 
-            st.subheader("Results")
+            # Display quantitative analysis results
+            st.subheader("Quantitative Results")
             c1, c2 = st.columns(2)
-            c1.metric("Max Lyapunov Exponent", lyap_str)
-            c2.metric("0-1 Test K", K)
+            c1.metric("Maximum Lyapunov Exponent", lyap_str)
+            c2.metric("0-1 Test K Value", K)
 
             c3, c4 = st.columns(2)
             c3.markdown(f"**Chaos State**: {res}")
-            c4.markdown(f"**0-1 Test Result**: {res}")
+            c4.markdown(f"**0-1 Test Verdict**: {res}")
 
-            st.subheader("Power Spectrum & Phase Space")
-            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-            ax1.plot(f, Pxx, color='cyan')
-            ax1.set_title("Power Spectrum (log scale)")
+            # Optimized plots for spectral and phase space analysis
+            st.subheader("Power Spectrum & Reconstructed Phase Space")
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5), dpi=120)
+
+            # Power Spectrum: Highlight continuous broadband chaotic feature
+            ax1.plot(f, Pxx, color='#0099FF', linewidth=1.2)
+            ax1.set_title("Power Spectrum (Log Scale)", fontweight='bold')
             ax1.set_yscale("log")
-            ax1.grid(alpha=0.3)
+            ax1.grid(alpha=0.4, color='white')
+            ax1.set_facecolor("#121212")
 
+            # Reconstructed Phase Space: Clear fractal attractor structure
             if len(psr) > 100:
-                ax2.plot(psr[:,0], psr[:,1], color='magenta', linewidth=0.3)
-                ax2.set_title("Reconstructed Phase Space")
+                ax2.plot(psr[:, 0], psr[:, 1], color='#FF00FF', linewidth=0.4, alpha=0.8)
+                ax2.set_title("Reconstructed Phase Space", fontweight='bold')
                 ax2.axis("equal")
+                ax2.set_facecolor("#121212")
             else:
-                ax2.text(0.5, 0.5, "Insufficient Data", ha="center", va="center")
+                ax2.text(0.5, 0.5, "Insufficient Data", ha="center", va="center", fontweight='bold')
 
             st.pyplot(fig)
             plt.close()
-            st.success("✅ Analysis completed.")
+            st.success("✅ Chaos Complexity Analysis Completed!")
 
 st.markdown("---")
-st.caption("Rossler Attractor | Chaos Theory | RK4 | Streamlit Academic Version")
+st.caption("Rossler Attractor | Chaos Theory | RK4 Integrator | Streamlit Academic Visualization Tool")
