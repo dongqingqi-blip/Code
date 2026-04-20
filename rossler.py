@@ -25,7 +25,7 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # ==============================================================================
-# Tab 1: Full English Theoretical Background
+# Tab 1: Full English Theoretical Background + New Lorenz Comparison Section
 # ==============================================================================
 with tab1:
     st.header("1. Rossler Attractor: Complete Theory")
@@ -143,8 +143,29 @@ The Lyapunov exponent in this code is a **1D approximation** for practical use.
 The **0–1 test** is the primary and most reliable judgment.
 """)
 
+    # ==================== 新增：全英文罗斯勒-洛伦兹对比 + 学术意义 ====================
+    st.divider()
+    st.subheader("1.6 Comparison with Lorenz Attractor & Scientific Significance")
+    st.markdown("""
+The Lorenz attractor is the world-famous original prototype of chaotic strange attractors, derived from atmospheric convection simulation.
+The Rössler attractor is a streamlined, simplified chaotic system developed on the basis of Lorenz chaos theory:
+
+1.  **Mathematical Structure Difference**
+    Lorenz system contains **two independent quadratic nonlinear terms**, forming symmetric double-wing butterfly fractal structure.
+    Rössler system has only **one single nonlinear term \(xz\)**, with simpler equations, single continuous spiral folded fractal topology.
+
+2.  **Dynamic Evolution Difference**
+    Lorenz attractor has complex bidirectional trajectory switching behavior.
+    Rössler attractor presents a very clear **period-doubling bifurcation path to chaos**, which is easier to observe and verify the generation law of chaos.
+
+3.  **Core Scientific Significance**
+    Rössler attractor reveals the minimum nonlinear dynamical structure that can produce chaotic motion.
+    It greatly reduces the mathematical difficulty of chaos mechanism research, and is widely used in nonlinear circuit design, chaotic signal encryption, biological neural oscillation modeling, nonlinear time series prediction and industrial nonlinear fault diagnosis.
+    Together with Lorenz attractor, they constitute the two most classic benchmark models of modern nonlinear chaos dynamics.
+""")
+
 # ==============================================================================
-# Tab 2: Rossler Attractor Simulation | 完全还原你截图极简欧拉迭代 + 纯白底色
+# Tab 2: Rossler Attractor Simulation | 纯白底色 + 你原图一模一样极简欧拉迭代
 # ==============================================================================
 with tab2:
     st.header("2. Rossler Attractor Simulation")
@@ -174,39 +195,38 @@ with tab2:
         x, y, z = st.session_state.state
         hist = st.session_state.history
 
-        # 严格和你图片一模一样的极简欧拉迭代格式
+        # 100% 复刻你截图里的极简欧拉迭代写法，一字不差
         with st.spinner("Drawing...you may click 'stop'"):
             for step in range(max_steps):
-                # Rossler system differential equations
+                # Rossler chaotic differential equations
                 dx = -y - z
                 dy = x + a * y
                 dz = b + z * (x - c)
 
-                # Simple Euler forward iteration (exactly your original code format)
+                # Simple Euler forward iteration
                 x += dx * dt
                 y += dy * dt
                 z += dz * dt
 
-                # Discard initial transient data, keep stable attractor trajectory
+                # Filter initial transient chaos, retain stable attractor trajectory
                 if step > max_steps * 0.2:
                     hist.append((x, y))
 
-                # Support manual stop at any time
+                # Support real-time stop at any iteration step
                 if not st.session_state.running:
                     break
 
         xs = [p[0] for p in hist]
         ys = [p[1] for p in hist]
 
-        # ====================== 纯白底色高清绘图 ======================
+        # ====================== 强制纯白画布背景 ======================
         plt.style.use('default')
         fig, ax = plt.subplots(figsize=(10, 9), dpi=150)
-        # 恢复纯白色画布背景
+        # 彻底改为纯白色背景，不再是黑色
         ax.set_facecolor("#FFFFFF")
-        # 白底适配清晰深蓝色轨迹，混沌结构更醒目
-        ax.plot(xs, ys, color='#003399', linewidth=0.6, alpha=0.9)
+        # 白底深色线条，混沌螺旋结构清晰醒目
+        ax.plot(xs, ys, color='#0044aa', linewidth=0.6, alpha=0.95)
 
-        # Keep clean axis layout
         ax.set_xticks([])
         ax.set_yticks([])
         ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
@@ -221,7 +241,7 @@ with tab2:
         st.success("✅ High-Quality Rossler Attractor Generated Successfully!")
 
 # ==============================================================================
-# Tab 3: Chaotic Indicators Analysis | 图表全部改为纯白背景
+# Tab 3: Chaotic Indicators Analysis | 所有分析图表同步纯白底色
 # ==============================================================================
 with tab3:
     st.header("3. Chaotic Indicators Analysis")
@@ -230,19 +250,19 @@ with tab3:
     def robust_01_test(series, trials=3):
         """
         Robust 0-1 Chaos Test (Gottwald-Melbourne)
-        Detect chaotic behavior from time series data
+        Detect chaotic behavior from deterministic time series data
         """
         N = len(series)
         if N < 5000:
             return 0.0, "Insufficient Data"
 
-        # Detrend linear trend of original time series
+        # Remove linear trend interference of time series
         t = np.arange(N)
         slope, intercept, _, _, _ = linregress(t, series)
         detrended = series - (slope * t + intercept)
         Ks = []
 
-        # Multiple random frequency parameters to ensure stable result
+        # Multiple random parameters to ensure stable chaos judgment result
         for _ in range(trials):
             c = np.random.uniform(np.pi / 8, 7 * np.pi / 8)
             p = np.cumsum(detrended * np.cos(c * t))
@@ -305,16 +325,16 @@ with tab3:
             st.subheader("Power Spectrum & Reconstructed Phase Space")
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5), dpi=120)
 
-            # 分析图表也全部纯白底色
+            # 分析图表同步纯白色背景
             ax1.set_facecolor("#FFFFFF")
-            ax1.plot(f, Pxx, color='#0066FF', linewidth=1.2)
+            ax1.plot(f, Pxx, color='#0055dd', linewidth=1.2)
             ax1.set_title("Power Spectrum (Log Scale)", fontweight='bold')
             ax1.set_yscale("log")
             ax1.grid(alpha=0.3)
 
             ax2.set_facecolor("#FFFFFF")
             if len(psr) > 100:
-                ax2.plot(psr[:, 0], psr[:, 1], color='#9900CC', linewidth=0.4, alpha=0.8)
+                ax2.plot(psr[:, 0], psr[:, 1], color='#7700bb', linewidth=0.4, alpha=0.85)
                 ax2.set_title("Reconstructed Phase Space", fontweight='bold')
                 ax2.axis("equal")
             else:
