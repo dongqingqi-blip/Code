@@ -173,12 +173,12 @@ with tab2:
     a = st.sidebar.slider("a", 0.0, 1.0, 0.20, 0.01)
     b = st.sidebar.slider("b", 0.0, 1.0, 0.20, 0.01)
     c = st.sidebar.slider("c", 0.0, 15.0, 5.70, 0.1)
-    # Precision t: 1-10, default 1 (Required modification)
-    t_precision = st.sidebar.slider("Precision t", 1, 10, 1)
-    dt_display = st.sidebar.slider("Step Size (ms)", 0.05, 1.0, 0.10, 0.05)
+    # Step Size: 1 - 10 ms, default 1 ms (Strictly follow your requirement)
+    dt_display = st.sidebar.slider("Step Size (ms)", 1.0, 10.0, 1.0, 0.1)
     max_steps = st.sidebar.slider("Total Steps (k)", 1000, 5000, 3000, 500) * 1000
 
-    dt = dt_display / 1000 / t_precision
+    # Original step calculation, no extra parameters
+    dt = dt_display / 1000
 
     col1, col2 = st.columns(2)
     with col1:
