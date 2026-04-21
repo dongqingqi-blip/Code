@@ -310,7 +310,7 @@ with tab3:
                 tau = 5 if K > 0.5 else 1
                 psr = phase_recon(xs, tau=tau)
 
-            st.subheader("Quantitative Results (Strictly Match Theory)")
+            st.subheader("Quantitative Results")
             c1, c2 = st.columns(2)
             c1.metric("Maximum Lyapunov Exponent (λ)", lyap_str)
             c2.metric("0-1 Test K Value", K)
