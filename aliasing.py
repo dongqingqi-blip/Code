@@ -9,6 +9,23 @@ st.set_page_config(page_title="信号与系统教学演示", layout="wide")
 plt.rcParams['font.sans-serif'] = ["WenQuanYi Zen Hei", "SimHei", "Microsoft YaHei", "Arial Unicode MS"]
 plt.rcParams["axes.unicode_minus"] = False  # 修复负号显示
 
+import streamlit as st
+
+# 全局设置中文字体
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+    html, body, [class*="css"]  {
+        font-family: 'Noto Sans SC', sans-serif;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# 测试中文显示
+st.title("中文标题测试")
+st.write("这是一段中文文本，使用Noto Sans SC字体显示")
+
 # 优化页面样式
 st.markdown("""
 <style>
