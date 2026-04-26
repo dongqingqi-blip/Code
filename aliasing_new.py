@@ -20,37 +20,55 @@ with tab_alias:
         with col1:
             f = st.slider(r"Signal Frequency $f\ (\rm Hz)$", 1, 50, 15, key="f_signal")
         with col2:
-            fs = st.slider(r"Sampling Frequency $f_{\rm s}\ (\rm Hz)$", 1, 50, 45, key="fs_sample")
+            fs = st.slider(r"Sampling Frequency $f_{\rm s}\ (\rm Hz)$", 1, 50, 25, key="fs_sample")
 
-        # Time Domain Signal
-        t = np.linspace(0, 1, 1000)
-        x = np.sin(2 * np.pi * f * t)
-        ts = np.arange(0, 1, 1 / fs)
-        xs = np.sin(2 * np.pi * f * ts)
+
+        # ====== Sinc Signal Definition (Integrated from First Code) ======
+        def sinc_signal(t, f):
+            y = np.zeros_like(t)
+            nonzero = t != 0
+            y[nonzero] = np.sin(2 * np.pi * f * t[nonzero]) / (np.pi * t[nonzero])
+            y[~nonzero] = 2 * f  # Limit value at t=0
+            return y
+
+
+        # Time Domain Signal (Symmetric time axis for sinc signal)
+        t = np.linspace(-0.5, 0.5, 3000)
+        ts = np.arange(-0.5, 0.5, 1 / fs)
+
+        # Original and sampled sinc signal
+        x = sinc_signal(t, f)
+        xs = sinc_signal(ts, f)
 
         # Figure 1: Time Domain Waveform
         fig1, ax1 = plt.subplots(figsize=(10, 5))
-        ax1.plot(t, x, label="Original Signal", color="red")
-        ax1.vlines(ts, 0, xs, colors='green')
-        ax1.scatter(ts, xs, color='green', label="Sampling Points")
+        ax1.plot(t, x, label="Original Sinc Signal", lw=1, color="red")
+        ax1.vlines(ts, 0, xs, lw=1, colors='green')
+        ax1.scatter(ts, xs, color='green', s=10, label="Sampling Points")
 
         f_alias = 0
         if fs < 2 * f:
+            # Calculate aliased frequency
             f_mod = f % fs
             f_alias = fs - f_mod if f_mod > fs / 2 else f_mod
-            x_alias = np.sin(2 * np.pi * f_alias * t)
-            x_alias = -np.sin(2 * np.pi * f_alias * t) if f_mod > fs / 2 else x_alias
-            ax1.plot(t, x_alias, '--', color='blue', label="Aliased Signal")
+            x_alias = sinc_signal(t, f_alias)
+
+            # Match phase with sampling points
+            sign = np.sign(xs[1] / sinc_signal(ts, f_alias)[1])
+            x_alias *= sign
+
+            ax1.plot(t, x_alias, '--', lw=1, color='blue', label="Aliased Signal")
             st.warning("⚠ Frequency Aliasing Occurred!")
         else:
             st.success("✅ Satisfies Nyquist Sampling Theorem!")
 
-        ax1.set_title("Time Domain Signal Waveform")
+        ax1.set_title("Time Domain Sinc Signal Waveform")
         ax1.set_xlabel("Time (s)")
         ax1.set_ylabel("Amplitude")
         ax1.legend()
         ax1.grid(True)
         st.pyplot(fig1)
+
 
         # FFT Function
         def fft_signal(sig, t):
@@ -59,6 +77,7 @@ with tab_alias:
             freq = np.fft.fftfreq(N, dt)
             spectrum = np.abs(np.fft.fft(sig)) / N
             return np.fft.fftshift(freq), np.fft.fftshift(spectrum)
+
 
         # Original Signal Spectrum
         freq_x, X = fft_signal(x, t)
@@ -72,7 +91,7 @@ with tab_alias:
         fig2, ax2 = plt.subplots(figsize=(10, 5))
         ax2.plot(freq_x, X, label="Original Signal Spectrum", color='red')
         ax2.set_xlim(-60, 60)
-        ax2.set_title("Original Signal Spectrum")
+        ax2.set_title("Original Sinc Signal Spectrum")
         ax2.set_xlabel("Frequency (Hz)")
         ax2.set_ylabel("Magnitude")
         ax2.legend()
@@ -91,17 +110,22 @@ with tab_alias:
             f_overlap_start = fs - f
             f_overlap_end = f
             if f_overlap_start < f_overlap_end:
-                ax3.fill_betweenx([0, ymax], f_overlap_start, f_overlap_end, color='blue', alpha=0.2, label="Aliasing Region")
+                ax3.fill_betweenx([0, ymax], f_overlap_start, f_overlap_end, color='blue', alpha=0.2,
+                                  label="Aliasing Region")
                 ax3.fill_betweenx([0, ymax], -f_overlap_end, -f_overlap_start, color='blue', alpha=0.2)
 
-        # Dashed Frequency Lines
-        def vline(x):
-            ax3.plot([x, x], [0, ymax], linestyle='--', linewidth=1, color='black')
 
-        vline(f)
-        vline(-f)
-        vline(fs)
-        vline(-fs)
+        # Dashed Frequency Lines with labels
+        def vline(x, label=None):
+            ax3.plot([x, x], [0, ymax], linestyle='--', linewidth=1, color='black')
+            if label:
+                ax3.text(x, ymax * 1.05, label, ha='center')
+
+
+        vline(f, r"$+f$")
+        vline(-f, r"$-f$")
+        vline(fs, r"$+f_s$")
+        vline(-fs, r"$-f_s$")
 
         ax3.set_title("Sampled Signal Spectrum (Periodic Extension)")
         ax3.set_xlabel("Frequency (Hz)")
@@ -112,7 +136,8 @@ with tab_alias:
 
     with sub_tab2:
         st.subheader("Anti-Aliasing Filter Demonstration")
-        st.markdown("**Principle**: Filter out high-frequency components before sampling to avoid aliasing fundamentally.")
+        st.markdown(
+            "**Principle**: Filter out high-frequency components before sampling to avoid aliasing fundamentally.")
 
         col1, col2, col3 = st.columns(3)
         with col1:
